@@ -56,7 +56,7 @@ for i, row in data.iterrows():
 
 # Add results to the dataframe
 data["Storage_mm"] = storage_series
-data["Streamflow_m3_per_s"] = np.array(streamflow_series) * A / (1000 * delta_t)  # Convert mm/day to m³/s
+data["Streamflow_m3_per_s"] = np.array(streamflow_series) * A / (1000 * 86400)  # Convert mm/day to m³/s
 
 # Perform a mass balance check
 total_precipitation = data["Precipitation_mm_per_d"].sum() * A / 1000  # Total precipitation (m³)
@@ -66,3 +66,36 @@ total_storage_change = (storage_series[-1] - initial_storage) * A / 1000  # Stor
 mass_balance = total_precipitation - (total_evapotranspiration + total_runoff + total_storage_change)
 
 mass_balance, data.head()  # Display mass balance check and sample data
+
+# Plot Storage Over Time
+plt.figure(figsize=(10, 6))
+plt.plot(data["Julian_day"], data["Storage_mm"], label="Storage (mm)")
+plt.title("Storage Over Time")
+plt.xlabel("Julian Day")
+plt.ylabel("Storage (mm)")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Plot Observed vs Simulated Streamflow
+plt.figure(figsize=(12, 6))
+plt.plot(
+    data["Julian_day"], 
+    data["Observed_streamflow_m3_per_s"], 
+    label="Observed Streamflow (m³/s)", 
+    color="blue", 
+    linestyle="--"
+)
+plt.plot(
+    data["Julian_day"], 
+    data["Streamflow_m3_per_s"], 
+    label="Simulated Streamflow (m³/s)", 
+    color="orange"
+)
+#plt.title("Observed vs Simulated Streamflow")
+plt.xlabel("Julian Day")
+plt.ylabel("Streamflow (m³/s)")
+plt.legend()
+plt.grid()
+plt.tight_layout()
+plt.show()
