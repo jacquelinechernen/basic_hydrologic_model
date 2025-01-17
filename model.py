@@ -2,39 +2,67 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# path to csv input file
-csv_file = '/content/Storage_Calculation_Results.csv'
+csv_file = "model_data.csv"
+data = pd.read_csv(csv_file)
 
-# Read the data from the CSV file
-df = pd.read_csv(csv_file)
+data.columns = [
+    "Julian_day",
+    "Precipitation_mm_per_d",
+    "Temperature_C",
+    "PET_mm_per_d",
+    "Observed_streamflow_m3_per_s"
+]
 
-# Initialize storage
-storage = 100.0  # Initial water storage
-storage_time_series = []
+# Model parameters
+c = 0.3  # Unitless
+S_max = 200.0  # mm
+k = 0.1  # d^-1
+A = 38.77 * 1e6  # km^2 to m^2
+initial_storage = 50.0  # mm
+delta_t = 1  # day
 
-# Perform calculations using numpy for efficiency
-precipitation = df["Precipitation"].values
-evapotranspiration = df["Evapotranspiration"].values
-runoff = df["Runoff"].values
+# Initialize variables
+storage = initial_storage
+storage_series = []  # To store storage values
+streamflow_series = []  # To store streamflow values
 
-# Calculate storage for each day
-for p, e, r in zip(precipitation, evapotranspiration, runoff):
-    delta_storage = p - e - r
+# Iterate through each day in the dataset
+for i, row in data.iterrows():
+    P = row["Precipitation_mm_per_d"]
+    PET = row["PET_mm_per_d"]
+    
+    # Step 1: Infiltration and Runoff
+    I = (1 - c) * P  # Infiltration
+    R = P - I  # Runoff
+    
+    # Step 2: Evapotranspiration
+    E = PET * (storage / S_max) if storage > 0 else 0
+    
+    # Step 3: Baseflow
+    B = k * storage
+    
+    # Update storage with limits
+    delta_storage = I - E - B
     storage += delta_storage
-    storage = max(storage, 0)  # Ensure storage doesn't go negative
-    storage_time_series.append(storage)
+    overflow = max(storage - S_max, 0)
+    storage = min(max(storage, 0), S_max)
+    
+    # Streamflow
+    Q = R + overflow + B  # Total streamflow at outlet
+    
+    # Append results
+    storage_series.append(storage)
+    streamflow_series.append(Q)
 
-# Add the storage results to the DataFrame
-df["Storage"] = storage_time_series
+# Add results to the dataframe
+data["Storage_mm"] = storage_series
+data["Streamflow_m3_per_s"] = np.array(streamflow_series) * A / (1000 * delta_t)  # Convert mm/day to m³/s
 
-# Plot the storage time series as a red line
-plt.figure(figsize=(8, 6))
-plt.plot(df["Timestep"], df["Storage"], color='red', marker='o', linestyle='-', label='Storage')
-plt.title('Water Storage Over Time')
-plt.xlabel('Timestep')
-plt.ylabel('Storage (mm)')
-plt.xticks(df["Timestep"])
-#plt.grid(True)
-plt.legend()
-plt.tight_layout()
-plt.show()
+# Perform a mass balance check
+total_precipitation = data["Precipitation_mm_per_d"].sum() * A / 1000  # Total precipitation (m³)
+total_evapotranspiration = (data["PET_mm_per_d"] * data["Storage_mm"] / S_max).sum() * A / 1000  # Total ET (m³)
+total_runoff = data["Streamflow_m3_per_s"].sum()  # Total streamflow (m³)
+total_storage_change = (storage_series[-1] - initial_storage) * A / 1000  # Storage change (m³)
+mass_balance = total_precipitation - (total_evapotranspiration + total_runoff + total_storage_change)
+
+mass_balance, data.head()  # Display mass balance check and sample data
