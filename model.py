@@ -97,20 +97,10 @@ RHS = total_precipitation - (total_evapotranspiration + total_runoff)
 
 mass_balance = LHS - RHS
 
-print(f"Updated Mass balance check: {mass_balance:.2f}")
-
-for i in range(0, len(data), 100):  # Print every 100 days
-    if i % 100 == 0:
-        print(f"Day {data['Julian_day'][i]}: P={P}, ET={AET}, Runoff={R}, Baseflow={B}, Overflow={O}, Storage={storage}")
-    print(f"Day {data['Julian_day'][i]}: P={data['Precipitation_mm_per_d'][i]}, ET={evapotranspiration_series[i]}, Runoff={runoff_series[i]}, Overflow={overflow_series[i]}")
-
-# Mass balance check output
 print(f"Mass balance check (should be close to zero): {mass_balance:.2f}")
-print(f"Maximum simulated streamflow: {max(data['Streamflow_m3_per_s']):.2f} m³/s")
-print(f"Total Precipitation: {total_precipitation:.2f} m³")
-print(f"Total Evapotranspiration: {total_evapotranspiration:.2f} m³")
-print(f"Total Runoff: {total_runoff:.2f} m³")
-print(f"Total Storage Change: {total_storage_change:.2f} m³")
+print(f"Left hand side: {LHS:.2f}")
+print(f"Right hand side: {RHS:.2f}")
+
 
 # Plot Storage Over Time
 plt.figure(figsize=(10, 6))
