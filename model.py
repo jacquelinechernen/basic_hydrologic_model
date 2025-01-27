@@ -92,12 +92,12 @@ total_runoff = sum(streamflow_series) * 86400  # Convert to m³
 total_storage_change = (storage_series[-1] - initial_storage) * A / 1000  # Storage change in m³
 
 # mass balance calculations
-LHS = (storage_series[-1] - initial_storage) * A / 1000  # Convert storage change to m³
-RHS = total_precipitation - (total_evapotranspiration + total_runoff)
+LHS = -1 * ((storage_series[-1] - initial_storage) * A / 1000 ) # Convert storage change to m³
+RHS = -1 * (total_precipitation - (total_evapotranspiration + total_runoff))
 
 mass_balance = LHS - RHS
 
-print(f"Mass balance check (should be close to zero): {mass_balance:.2f}")
+print(f"Mass balance check: {mass_balance:.2f}")
 print(f"Left hand side: {LHS:.2f}")
 print(f"Right hand side: {RHS:.2f}")
 
