@@ -15,12 +15,14 @@ data.columns = [
 ]
 
 # Model parameters
-c = 0.3  # Unitless runoff coefficient
+c = -1  # Unitless runoff coefficient
 S_max = 200.0  # mm, maximum soil water storage
 k = 0.1  # d^-1, baseflow coefficient
 A = 38.77 * 1e6  # m², watershed area (converted from km²)
 initial_storage = 50.0  # mm, initial soil water storage
 delta_t = 1  # day, time step
+
+print(f"Initial storage exceeds max soil water storage! {initial_storage:.2f} > {S_max:.2f}")
 
 # Initialize variables
 storage = initial_storage
@@ -98,9 +100,32 @@ RHS = -1 * (total_precipitation - (total_evapotranspiration + total_runoff))
 mass_balance = LHS - RHS
 
 print(f"Mass balance check: {mass_balance:.2f}")
-print(f"Left hand side: {LHS:.2f}")
-print(f"Right hand side: {RHS:.2f}")
+print(f"Left hand side: {LHS:.2f} m³")
+print(f"Right hand side: {RHS:.2f} m³")
 
+# # Report streamflow on day 100
+# day_100_streamflow = data.loc[data["Julian_day"] == 100, "Streamflow_m3_per_s"].values[0]
+# print(f"Streamflow on day 100: {day_100_streamflow:.2f} m³/s (average rate over the timestep)")
+
+# # Report soil water storage at the start of day 100
+# day_100_storage = data.loc[data["Julian_day"] == 100, "Storage_mm"].values[0]
+# print(f"Soil water storage at the start of day 100: {day_100_storage:.2f} mm")
+
+# # Calculate total runoff and overflow over the entire period
+# total_runoff_mm = sum(runoff_series)  # Total runoff in mm
+# total_overflow_mm = sum(overflow_series)  # Total overflow in mm
+
+# # Print results
+# print(f"Total simulated runoff: {total_runoff_mm:.2f} mm")
+# print(f"Total simulated overflow: {total_overflow_mm:.2f} mm")
+
+# # Compare runoff and overflow
+# if total_runoff_mm > total_overflow_mm:
+#     print("Total runoff is greater than total overflow.")
+# elif total_runoff_mm < total_overflow_mm:
+#     print("Total overflow is greater than total runoff.")
+# else:
+#     print("Total runoff and total overflow are equal.")
 
 # Plot Storage Over Time
 plt.figure(figsize=(10, 6))
